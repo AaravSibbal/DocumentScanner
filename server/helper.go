@@ -39,3 +39,7 @@ func (app *application) SetHtmlHeaders(w http.ResponseWriter) http.ResponseWrite
 	w.Header().Set("Content-Type", "text/html")
 	return w
 }
+
+func (app *application) ExecutePython(filename string){
+
+}
