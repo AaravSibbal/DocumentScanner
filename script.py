@@ -1,0 +1,1 @@
+print("we can execute python from go now we are truely the best")
