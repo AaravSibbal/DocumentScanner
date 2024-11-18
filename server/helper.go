@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime/debug"
 )
 
@@ -19,7 +20,7 @@ func (app *application) serverError(w http.ResponseWriter, err error) {
 func (app *application) readHTMLFile(name string) ([]byte, error) {
 	file, err := os.OpenFile(fmt.Sprintf("ui/html/%s", name), os.O_RDONLY, 0644)
 	if err != nil {
-		app.ErrorLog.Printf("couldn't open file: %s\n%v",name, err )
+		app.ErrorLog.Printf("couldn't open file: %s\n%v", name, err)
 		return nil, err
 	}
 
@@ -34,12 +35,22 @@ func (app *application) readHTMLFile(name string) ([]byte, error) {
 	return content, nil
 }
 
-func (app *application) SetHtmlHeaders(w http.ResponseWriter) http.ResponseWriter{
-	
+func (app *application) SetHtmlHeaders(w http.ResponseWriter) http.ResponseWriter {
+
 	w.Header().Set("Content-Type", "text/html")
 	return w
 }
 
-func (app *application) ExecutePython(filename string){
+func (app *application) ExecutePython(filename string) (string, error) {
+	cmd := exec.Command("python", filename)
 
+	// Get the output from the script
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	// Print output to the server and client
+	fmt.Println(string(output))
+	return string(output), nil
 }
