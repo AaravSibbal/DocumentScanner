@@ -13,6 +13,7 @@ func (app *application) Routes() http.Handler {
 	mux := pat.New()
 
 	mux.Get("/", http.HandlerFunc(app.home))
+	mux.Post("/image/latex", http.HandlerFunc(app.imageHandler))
 
 	fileServer := http.FileServer(http.Dir("ui/static/"))
 	mux.Get("/static/", http.StripPrefix("/static", fileServer))

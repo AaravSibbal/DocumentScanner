@@ -4,6 +4,7 @@
 let video = document.getElementById('video-element')
 let photoBtn = document.getElementById("photo-btn")
 let latexDiv = document.getElementById("latex")
+let latexError = document.getElementById("latex-error")
 let globalLatexString = ""
 
 /**
@@ -21,32 +22,43 @@ if(navigator.mediaDevices.getUserMedia){
         })
 }
 
-photoBtn.addEventListener('click', ()=>{
-    
-    const ctx = canvas.getContext('2d')
-    // these 2 lines are just for testing
+photoBtn.addEventListener('click', async ()=>{
+    const ctx = canvas.getContext('2d');
+    // Draw something on the canvas for testing
     ctx.fillStyle = 'blue';
     ctx.fillRect(10, 10, 200, 200);
-
-    // Convert canvas to Base64 image
-    const imageData = canvas.toDataURL('image/png');
-
+    
+    const imageData = canvas.toDataURL("image/png"); // Capture as PNG
+    const base64Image = imageData.split(",")[1]; // Get the base64 part
+    
     // Send to server
-    // this is the api that client is trying to reach
-    fetch('/localhost:8001/image/latex', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ image: imageData }),
+    await fetch("/image/latex", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ image: base64Image }),
     })
-    .then((response) => response.json())
-    .then((data) => {
-        console.log(data)
-        addLatex(data.latex)
-        latexToHtml(data.latex)
+    .then((response)=>{
+        if(!response.ok){
+            throw new Error("there was a problem with the server")
+        }
+
+        return response.json()
     })
-    .catch((error) => console.error('Error:', error));
+    .then((resultObj)=>{
+        if(!resultObj.success){
+            imageError(resultObj)
+            return
+        }
+
+        addLatex(resultObj.latex)
+        latexToHtml(sanitizeLatex(resultObj.latex))
+    })
+    .catch(error =>{
+        console.error(error)
+    })
+    
 })
 
 /**
@@ -90,4 +102,8 @@ function addLatex(latexStr){
     }
 
     globalLatexString += latexStr
+}
+
+function imageError(responseObj){
+    latexError.innerText = responseObj.error
 }
